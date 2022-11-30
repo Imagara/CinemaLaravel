@@ -1,0 +1,21 @@
+Guest:
+/api/register |  method: Post | Body: Name, Email, Password
+/api/login |  method: Post
+/api/posts - просмотр всех постов |  method: Get
+/api/posts/{id} - просмотр поста пo id |  method: Get
+/api/posts/search/{name} - поиск по имени поста |  method: Get
+
+
+
+Auth:
+api/posts/comment - просмотр комментариев |  method: Get
+api/posts/{id}/comment - создание коммента к посту |  method: Post | Body: title, body
+api/posts/show/{id}/comment - просмотр комментария у поста |  method: Get
+api/posts/update/{id}/comment - редактирование коммента у поста |  method: Put
+api/posts/delete/{id}/comment - удаление комментария у поста |  method: Delete
+api/posts/create - создание поста |  method: Post | Body: Name, Description
+api/posts/update/{id} - редактирование поста по id |  method: Put
+api/posts/delete/{id} - удаление поста по id |  method: Delete
+api/logout - выход  |  method: Post
+
+Все posts заменил на previews

@@ -5,64 +5,52 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
     public function register(Request $request) {
-        $fields = $request->validate([
-            'name' => 'required|string',
-            'email' => 'required|string|unique:users,email',
-            'password' => 'required|string|confirmed'
-        ]);
+        if(Auth::check()){
+            return redirect(route('user.profile'));
+        }
 
-        $user = User::create([
-            'name' => $fields['name'],
-            'email' => $fields['email'],
-            'password' => bcrypt($fields['password'])
-        ]);
-
-        $token = $user->createToken('myapptoken')->plainTextToken;
-
-        $response = [
-            'user' => $user,
-            'token' => $token
-        ];
-
-        return response($response, 201);
-    }
-
-    public function login(Request $request) {
-        $fields = $request->validate([
-            'email' => 'required|string',
+        $validate = Validator::make($request->all(),[
+            'email' => 'required|email',
             'password' => 'required|string'
         ]);
 
-        // Check email
-        $user = User::where('email', $fields['email'])->first();
-
-        // Check password
-        if(!$user || !Hash::check($fields['password'], $user->password)) {
-            return response([
-                'message' => 'Bad creds'
-            ], 401);
+        if ($validate->fails()){
+            return \response()->json($validate->errors());
         }
 
-        $token = $user->createToken('myapptoken')->plainTextToken;
+        $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password)
+            ]);
 
-        $response = [
-            'user' => $user,
-            'token' => $token
-        ];
-
-        return response($response, 201);
+        if($user){
+            Auth::login($user);
+            return redirect()->to(route('user.profile'));
+        }
+        
+        return redirect()->to(route('user.profile'))->withErrors([
+            'formError' => 'Произошла ошибка при сохранении пользователя'
+        ]);
     }
+    public function login(Request $request) {
+        if(Auth::check()){
+            return redirect(route('user.profile'));
+        }
+        $formFields = $request->only(['email','password']);
 
-    public function logout(Request $request) {
-        auth()->user()->tokens()->delete();
-
-        return [
-            'message' => 'Logged out'
-        ];
+        if(Auth::attempt($formFields)){
+            return redirect(route('user.profile'));
+        }
+        return redirect(route('user.login'))->withErrors([
+            'email' => 'Не удалось авторизоваться'
+        ]);
     }
 }
